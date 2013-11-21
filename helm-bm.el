@@ -22,6 +22,9 @@
 ;;; Commentary:
 
 ;; `helm-bm.el' is bm.el `helm' interface.
+;; https://github.com/jixiuf/helm-bm
+;; my frok https://github.com/jixiuf/bm()
+;;
 ;; https://github.com/joodland/bm
 ;; http://www.emacswiki.org/emacs/VisibleBookmarks
 
@@ -38,6 +41,7 @@
 ;;
 
 (require 'helm)
+(require 'helm-utils)
 (require 'bm)
 
 (defgroup helm-bm nil
@@ -58,32 +62,31 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
 (defun helm-bm-global-init()
   "Init function for `helm-source-bm-global'."
   (with-current-buffer (helm-candidate-buffer 'global)
-    (insert  (mapconcat #'(lambda (buffer)
-                            (with-current-buffer buffer
-                              (bm-show-extract-bookmarks)))
-                        (buffer-list) ""))))
+    (insert (bm-show-extract-bookmarks bm-in-lifo-order t))))
 
 (defvar helm-source-bm-global
   '((name . "Visible Bookmarks in All Buffers")
     (init . helm-bm-global-init)
     (candidates-in-buffer)
     (get-line . buffer-substring)
-    (action . helm-bm-goto-bookmark-action))
+    (persistent-action . helm-bm-goto-bookmark-persistent-action)
+    (action . (("Goto bookmark" . helm-bm-goto-bookmark-action)
+               ("Remove bookmark" . helm-bm-remove-bookmark-action))))
   "All Visible Bookmarks")
 
 (defun helm-bm-init()
   "Init function for `helm-source-bm'"
-  (let ((lines (bm-show-extract-bookmarks)))
-    (with-current-buffer (helm-candidate-buffer 'global)
-      (insert lines))))
+  (with-current-buffer (helm-candidate-buffer 'global)
+    (insert (bm-show-extract-bookmarks bm-in-lifo-order))))
 
 (defvar helm-source-bm
   '((name . "Visible Bookmarks in Current Buffer ")
     (init . helm-bm-init)
     (candidates-in-buffer)
     (get-line . buffer-substring)
-    (action . helm-bm-goto-bookmark-action)
-    )
+    (persistent-action . helm-bm-goto-bookmark-persistent-action)
+    (action . (("Goto bookmark" . helm-bm-goto-bookmark-action)
+               ("Remove bookmark" . helm-bm-remove-bookmark-action))))
   " Visible Bookmarks In Current Buffer")
 
 (defun helm-bm-goto-bookmark-action(_c)
@@ -94,6 +97,27 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
         (message "No bookmark here.")
       (switch-to-buffer (get-buffer buffer-name))
       (bm-goto bookmark))))
+
+(defun helm-bm-goto-bookmark-persistent-action(_c)
+  (let* ((c (helm-get-selection nil 'withprop))
+         (buffer-name (get-text-property 0 'bm-buffer c))
+         (bookmark (get-text-property 0 'bm-bookmark c)))
+    (if (null buffer-name)
+        (message "No bookmark here.")
+      (switch-to-buffer (get-buffer buffer-name))
+      (bm-goto bookmark)
+      (when (equal bm-highlight-style 'bm-highlight-only-fringe)
+        (helm-match-line-color-current-line)))))
+
+
+(defun helm-bm-remove-bookmark-action(_c)
+  (let* ((c (helm-get-selection nil 'withprop))
+         (buffer-name (get-text-property 0 'bm-buffer c))
+         (bookmark (get-text-property 0 'bm-bookmark c)))
+    (if (null buffer-name)
+        (message "No bookmark here.")
+      (bm-bookmark-remove bookmark))))
+
 
 ;;;###autoload
 (defun helm-bm(&optional argv)

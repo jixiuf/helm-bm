@@ -69,9 +69,10 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
     (init . helm-bm-global-init)
     (candidates-in-buffer)
     (get-line . buffer-substring)
+    (candidate-transformer . helm-bm-candidate-transformer)
     (persistent-action . helm-bm-goto-bookmark-persistent-action)
     (action . (("Goto bookmark" . helm-bm-goto-bookmark-action)
-               ("Remove bookmark" . helm-bm-remove-bookmark-action))))
+               ("Remove bookmark(s)" . helm-bm-remove-bookmark-action))))
   "All Visible Bookmarks")
 
 (defun helm-bm-init()
@@ -84,24 +85,23 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
     (init . helm-bm-init)
     (candidates-in-buffer)
     (get-line . buffer-substring)
+    (candidate-transformer . helm-bm-candidate-transformer)
     (persistent-action . helm-bm-goto-bookmark-persistent-action)
     (action . (("Goto bookmark" . helm-bm-goto-bookmark-action)
-               ("Remove bookmark" . helm-bm-remove-bookmark-action))))
+               ("Remove bookmark(s)" . helm-bm-remove-bookmark-action))))
   " Visible Bookmarks In Current Buffer")
 
-(defun helm-bm-goto-bookmark-action(_c)
-  (let* ((c (helm-get-selection nil 'withprop))
-         (buffer-name (get-text-property 0 'bm-buffer c))
+(defun helm-bm-goto-bookmark-action(c)
+  (let* ((buffer-name (get-text-property 0 'bm-buffer c))
          (bookmark (get-text-property 0 'bm-bookmark c)))
     (if (null buffer-name)
         (message "No bookmark here.")
       (switch-to-buffer (get-buffer buffer-name))
       (bm-goto bookmark))))
 
-(defun helm-bm-goto-bookmark-persistent-action(_c)
-  (let* ((c (helm-get-selection nil 'withprop))
-         (buffer-name (get-text-property 0 'bm-buffer c))
-         (bookmark (get-text-property 0 'bm-bookmark c)))
+(defun helm-bm-goto-bookmark-persistent-action(c)
+  (let ((buffer-name (get-text-property 0 'bm-buffer c))
+        (bookmark (get-text-property 0 'bm-bookmark c)))
     (if (null buffer-name)
         (message "No bookmark here.")
       (switch-to-buffer (get-buffer buffer-name))
@@ -109,15 +109,17 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
       (when (equal bm-highlight-style 'bm-highlight-only-fringe)
         (helm-match-line-color-current-line)))))
 
-
-(defun helm-bm-remove-bookmark-action(_c)
-  (let* ((c (helm-get-selection nil 'withprop))
-         (buffer-name (get-text-property 0 'bm-buffer c))
-         (bookmark (get-text-property 0 'bm-bookmark c)))
-    (if (null buffer-name)
-        (message "No bookmark here.")
-      (bm-bookmark-remove bookmark))))
-
+(defun helm-bm-remove-bookmark-action(c)
+  (save-excursion
+    (mapc #'(lambda(c)
+              (let* ((buffer-name (get-text-property 0 'bm-buffer c))
+                     (bookmark (get-text-property 0 'bm-bookmark c)))
+                (if (null buffer-name)
+                    (message "No bookmark here.")
+                  (with-current-buffer buffer-name
+                    (goto-char (overlay-start bookmark))
+                    (bm-bookmark-remove bookmark)))))
+          (helm-marked-candidates))))
 
 ;;;###autoload
 (defun helm-bm(&optional argv)
@@ -135,7 +137,12 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
                 :buffer "*helm bm*")
         (helm :sources '(helm-source-bm-global)
               :buffer "*helm bm*")))))
-
+(defun helm-bm-candidate-transformer(candidates)
+  (mapcar
+   #'(lambda(c)
+       (let ((buffer-name (get-text-property 0 'bm-buffer c))
+             (bookmark (get-text-property 0 'bm-bookmark c)))
+         (cons c c ))) candidates))
 
 (provide 'helm-bm)
 

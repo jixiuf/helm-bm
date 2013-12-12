@@ -137,12 +137,9 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
                 :buffer "*helm bm*")
         (helm :sources '(helm-source-bm-global)
               :buffer "*helm bm*")))))
+
 (defun helm-bm-candidate-transformer(candidates)
-  (mapcar
-   #'(lambda(c)
-       (let ((buffer-name (get-text-property 0 'bm-buffer c))
-             (bookmark (get-text-property 0 'bm-bookmark c)))
-         (cons c c ))) candidates))
+  (mapcar #'(lambda(c) (cons c c )) candidates))
 
 (provide 'helm-bm)
 

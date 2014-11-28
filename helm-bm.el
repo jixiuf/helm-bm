@@ -4,7 +4,7 @@
 
 ;; Author: 纪秀峰 <jixiuf@gmail.com>
 ;; URL: https://github.com/jixiuf/helm-bm
-;; Version: 1.0.1
+;; Version: 1.0.2
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
 (defun helm-bm-global-init()
   "Init function for `helm-source-bm-global'."
   (with-current-buffer (helm-candidate-buffer 'global)
-    (insert (bm-show-extract-bookmarks bm-in-lifo-order t))))
+    (insert (cadr (bm-show-extract-bookmarks bm-in-lifo-order t)))))
 
 (defvar helm-source-bm-global
   '((name . "Visible Bookmarks in All Buffers")
@@ -76,7 +76,7 @@ if `buffer'  `helm-bm' List Bookmarks in Current Buffer,
 (defun helm-bm-init()
   "Init function for `helm-source-bm'"
   (with-current-buffer (helm-candidate-buffer 'global)
-    (insert (bm-show-extract-bookmarks bm-in-lifo-order))))
+    (insert (cadr  (bm-show-extract-bookmarks bm-in-lifo-order)))))
 
 (defvar helm-source-bm
   '((name . "Visible Bookmarks in Current Buffer ")

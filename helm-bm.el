@@ -1,10 +1,9 @@
 ;;; helm-bm.el ---  Visible Bookmark bm.el helm interface
 
-;; Copyright (C) 2013 by 纪秀峰
+;; Copyright (C) 2013,2014,2015 by jixiuf
 
-;; Author: 纪秀峰 <jixiuf@gmail.com>
-;; URL: https://github.com/jixiuf/helm-bm
-;; Version: 1.0.2
+;; Author: jixiuf <jixiuf (at) gmail.com>
+;; Version: 1.0.3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
